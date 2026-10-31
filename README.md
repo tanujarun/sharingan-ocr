@@ -1,5 +1,7 @@
 # Sharingan OCR
 
+![Sharingan](assets/banner.png)
+
 Freeze your screen, draw a box over anything, and select the words **right where they sit in the picture**. Sharingan reads text and QR codes from screenshots, posters, videos, PDFs and images locally, with no cloud service.
 
 ![Sharingan selecting a word in a paragraph](assets/hero.png)
@@ -10,7 +12,7 @@ Freeze your screen, draw a box over anything, and select the words **right where
 
 <img src="assets/eye.gif" width="216" alt="The dot-matrix eye activating when text is copied">
 
-It reads designed text too, and the panel moves inside the box when there is no room around it:
+It reads designed text too:
 
 ![Sharingan reading a flyer](assets/poster.png)
 
@@ -67,7 +69,7 @@ QR codes are read with OpenCV, which comes with the engine. In testing it read 4
 
 The OCR models are aimed at Chinese and English. Only English has been tested.
 
-The example document, flyer and receipt in these images are made up.
+The article, flyer and Wi-Fi code in these images are made up.
 
 ## License
 
