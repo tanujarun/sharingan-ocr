@@ -1,0 +1,3 @@
+module Commons
+singleton Color Color.qml
+singleton Style Style.qml
