@@ -225,6 +225,7 @@ def read_codes(req):
     framed += [255 - framed[0], cv2.copyMakeBorder(crop, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT, value=white),
                cv2.copyMakeBorder(255 - crop, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT, value=white)]
     detector = cv2.QRCodeDetectorAruco()
+    found = {}
     for k in (1, 2, 3):
         if k > 1 and crop.shape[0] * crop.shape[1] * k * k > 16_000_000:
             break
@@ -235,11 +236,13 @@ def read_codes(req):
                 ok, texts, points, _ = detector.detectAndDecodeMulti(picture)
             except cv2.error:
                 continue
-            found = [(t, p) for t, p in zip(texts, points if ok else []) if t]
-            if found:
-                lines = [line_from(t, [tuple(c / k for c in corner) for corner in p.tolist()], [], req["scale"], 1.0, -PAD, -PAD) for t, p in found]
-                return lines, [bbox(line) for line in lines]
-    return [], []
+            for text, corners in zip(texts, points if ok else []):
+                if text:
+                    found.setdefault(text, [tuple(c / k for c in corner) for corner in corners.tolist()])
+        if found:                           # every picture ran: one box can hold dark and light codes
+            break
+    lines = [line_from(text, quad, [], req["scale"], 1.0, -PAD, -PAD) for text, quad in found.items()]
+    return lines, [bbox(line) for line in lines]
 
 
 def outside(line, boxes):

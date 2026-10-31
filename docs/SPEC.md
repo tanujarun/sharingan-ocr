@@ -45,7 +45,7 @@ Each scale (1×, 2×, 3×, skipping sizes over 16 MP) tries four pictures, and a
 - The box on a white margin, because a box drawn tight around a code has no quiet zone and otherwise fails.
 - The inverted box on a white margin.
 
-This read 47 of 48 test codes across sizes, blur, inversion and tilt, at about 14 ms on average. It needs OpenCV, so the Tesseract fallback skips codes when OpenCV is missing. Never open a payload automatically.
+All four run at a scale before stopping, because one box can hold both dark and light codes. This read 47 of 48 test codes across sizes, blur, inversion and tilt, at about 14 ms on average. It needs OpenCV, so the Tesseract fallback skips codes when OpenCV is missing. Never open a payload automatically.
 
 ## Selection
 
