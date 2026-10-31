@@ -63,7 +63,7 @@ It has two limits. It knows nothing about text the detector never found, so a bl
 
 The screen is captured at native resolution, then [RapidOCR](https://github.com/RapidAI/RapidOCR) reads the box on the CPU, typically in 0.3 to 1.5 seconds. Tesseract is the fallback if the engine breaks, and the panel then says `TESSERACT`. The engine takes about 380 MB and runs only while the overlay is open. Frozen frames are deleted on close.
 
-QR codes are read with OpenCV, which comes with the engine. In testing it read 47 of 48 screen-sized codes, and a 900 × 600 box with no code adds about  ms. Other barcodes are not supported.
+QR codes are read with OpenCV, which comes with the engine. In testing it read 47 of 48 screen-sized codes, and a 900 × 600 box with no code adds about 130 ms. Other barcodes are not supported.
 
 The OCR models are aimed at Chinese and English. Only English has been tested.
 
