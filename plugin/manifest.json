@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "tanuj.sharingan",
   "name": "Sharingan",
-  "version": "1.2.0",
+  "version": "1.3.0",
   "author": "tanuj",
   "description": "Reads any text on screen: freeze the screen, draw a box over anything, then select and copy the words in it",
   "kinds": [

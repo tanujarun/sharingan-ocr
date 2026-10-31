@@ -39,7 +39,7 @@ Run the checks in order and stop at the first match.
 Check every item that applies, and report each one as passed, failed or not checked.
 
 1. The shortcut opens the overlay, and every monitor freezes.
-2. A dragged box produces the correct text in the panel on a real document.
+2. A dragged box produces the correct text in the panel on a real document, and a box around a QR code shows its contents.
 3. The clipboard holds exactly the selected text after copying, checked by pasting.
 4. The picture selection lands on the right characters, including on a scaled display.
 5. Double click, triple click, Ctrl+A, right-click and Enter do what the README says.

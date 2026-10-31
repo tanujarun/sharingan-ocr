@@ -26,6 +26,7 @@ Item {
   property int framesLoaded: 0
   property string engineName: ""
   property int readMs: 0
+  property int codeCount: 0                 // QR codes among the lines
   property int requestId: 0
 
   property real boxX: 0
@@ -350,6 +351,7 @@ Item {
     engineName = msg.engine
     if (msg.error) { console.warn("tanuj.sharingan:", msg.error); stage = "failed"; return }
     readMs = msg.ms
+    codeCount = msg.codes || 0
     lines = msg.lines
     fullText = msg.text
     selA = 0
@@ -922,7 +924,7 @@ Item {
                   visible: !root.readable
                   color: root.stage === "failed" ? root.ui.accentInk : root.ui.ink2
                   text: root.stage === "reading" ? "Reading"
-                    : root.stage === "empty" ? "No text in this box. Draw another"
+                    : root.stage === "empty" ? "Nothing to read in this box. Draw another"
                     : root.stage === "failed" ? "The OCR engine failed. Draw again" : ""
                   opacity: root.stage === "reading" ? 0.55 + 0.45 * Math.sin(root.scanClock * 5) : 1
                 }
@@ -1099,7 +1101,7 @@ Item {
                     }
                   }
                   MonoLabel {
-                    text: (root.engineName === "TESSERACT" ? "Tesseract" : "Sharingan") + (root.readMs > 0 ? "  " + (root.readMs / 1000).toFixed(1) + " s" : "")
+                    text: (root.engineName === "TESSERACT" ? "Tesseract" : "Sharingan") + (root.codeCount > 0 ? "  QR" : "") + (root.readMs > 0 ? "  " + (root.readMs / 1000).toFixed(1) + " s" : "")
                   }
                   MonoLabel { text: "Ctrl C  /  Enter closes" }
                 }

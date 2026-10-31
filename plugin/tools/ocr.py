@@ -4,7 +4,7 @@
 logical px. Replies give each line in reading order, in logical px relative to the box:
 {"text", "start", "cx", "cy", "w", "h", "angle", "stops", "conf"}; stops are the offsets along the line of
 every character boundary, so a pointer position maps to a character; conf is [first char, end char, 0..1] per
-word, so the panel can answer for any selection."""
+word, so the panel can answer for any selection. A QR code in the box reads as one more line."""
 import json
 import math
 import os
@@ -207,6 +207,45 @@ class Tesseract:
         return lines
 
 
+def read_codes(req):
+    """QR codes in the box as lines; (lines, boxes) with boxes in logical px, to drop OCR noise read inside them.
+    Tries the box as it is, inverted for light-on-dark codes, on a white margin for a box drawn tight around a code
+    (the detector needs the quiet zone), then the same again enlarged for small codes."""
+    try:
+        import cv2
+    except ImportError:                     # the tesseract fallback runs without OpenCV
+        return [], []
+    img = cv2.imread(req["path"])
+    if img is None:
+        return [], []
+    x, y = int(req["x"]), int(req["y"])
+    crop = img[y:y + int(req["h"]), x:x + int(req["w"])]
+    white = (255, 255, 255)
+    framed = [cv2.copyMakeBorder(crop, PAD, PAD, PAD, PAD, cv2.BORDER_REPLICATE)]
+    framed += [255 - framed[0], cv2.copyMakeBorder(crop, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT, value=white),
+               cv2.copyMakeBorder(255 - crop, PAD, PAD, PAD, PAD, cv2.BORDER_CONSTANT, value=white)]
+    detector = cv2.QRCodeDetectorAruco()
+    for k in (1, 2, 3):
+        if k > 1 and crop.shape[0] * crop.shape[1] * k * k > 16_000_000:
+            break
+        for picture in framed:
+            if k > 1:
+                picture = cv2.resize(picture, None, fx=k, fy=k, interpolation=cv2.INTER_NEAREST)
+            try:
+                ok, texts, points, _ = detector.detectAndDecodeMulti(picture)
+            except cv2.error:
+                continue
+            found = [(t, p) for t, p in zip(texts, points if ok else []) if t]
+            if found:
+                lines = [line_from(t, [tuple(c / k for c in corner) for corner in p.tolist()], [], req["scale"], 1.0, -PAD, -PAD) for t, p in found]
+                return lines, [bbox(line) for line in lines]
+    return [], []
+
+
+def outside(line, boxes):
+    return not any(x0 <= line["cx"] <= x1 and y0 <= line["cy"] <= y1 for x0, y0, x1, y1 in boxes)
+
+
 def reply(obj):
     OUT.write(json.dumps(obj) + "\n")               # ASCII: stdout may not be UTF-8 on Windows
     OUT.flush()
@@ -223,12 +262,13 @@ def main():
         req = json.loads(raw)
         began = time.time()
         try:
-            lines, seps = order(engine.read(req))
+            codes, boxes = read_codes(req)
+            lines, seps = order(codes + [line for line in engine.read(req) if outside(line, boxes)])
             text = ""
             for i, line in enumerate(lines):
                 line["start"] = len(text)
                 text += line["text"] + (seps[i] if i < len(seps) else "")
-            reply({"id": req["id"], "engine": engine.name, "ms": int((time.time() - began) * 1000), "lines": lines, "text": text})
+            reply({"id": req["id"], "engine": engine.name, "ms": int((time.time() - began) * 1000), "lines": lines, "text": text, "codes": len(codes)})
         except Exception as err:
             reply({"id": req["id"], "engine": engine.name, "error": str(err)})
 

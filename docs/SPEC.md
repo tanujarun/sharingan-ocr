@@ -19,7 +19,7 @@ Request: `{"id", "path", "x", "y", "w", "h", "scale"}`. `x y w h` are native pix
 
 Replies: first `{"ready": true, "engine": "RAPIDOCR"}`, then one of:
 
-- `{"id", "engine", "ms", "lines", "text"}`
+- `{"id", "engine", "ms", "lines", "text", "codes"}`, where `codes` is the number of QR codes among the lines
 - `{"id", "engine", "error"}`
 
 Each line has `text`, `start` (offset in the full text), `cx cy w h angle` (logical px relative to the box), `stops` (the offset along the line of every character boundary), and `conf` (a list of `[first char, end char, 0..1]` per word).
@@ -33,6 +33,19 @@ Ignore replies whose `id` is not the latest request. Requests made while the eng
 - Each box gets 24 px of replicated edge padding, because the detector misses text touching the edge.
 - Lines scoring under 0.5 are dropped.
 - Tall boxes are vertical text: both rotations are tried and the better score wins.
+
+### QR codes
+
+`read_codes` in `ocr.py` uses `cv2.QRCodeDetectorAruco`, which beat `cv2.QRCodeDetector` in testing. A code becomes one more line: its text is the payload, its quad is the code's corners, and its confidence is 1.0. It joins the same reading order and selection as any other line. OCR lines centred inside a code are dropped, because they are noise.
+
+Each scale (1×, 2×, 3×, skipping sizes over 16 MP) tries four pictures, and all of them matter:
+
+- The box with replicated padding.
+- That picture inverted, for light-on-dark codes.
+- The box on a white margin, because a box drawn tight around a code has no quiet zone and otherwise fails.
+- The inverted box on a white margin.
+
+This read 47 of 48 test codes across sizes, blur, inversion and tilt, at about 14 ms on average. It needs OpenCV, so the Tesseract fallback skips codes when OpenCV is missing. Never open a payload automatically.
 
 ## Selection
 
@@ -56,7 +69,7 @@ Panel colours sit on a black bezel, and gaps between tiles are 6 px with an 18 p
 
 - **Top tile:** the text in a mono font at 11 px, scrollable, with the copy icon in its bottom-right corner.
 - **Bottom left, 164 wide:** word count in light 34 px numerals, `WORDS` or `OF N WORDS`, and the eye.
-- **Bottom right:** an `ALL / SELECTED` capsule 164 × 30 with one sliding red pill, then three small lines: confidence, `SHARINGAN  0.7 S`, `CTRL C  /  ENTER CLOSES`.
+- **Bottom right:** an `ALL / SELECTED` capsule 164 × 30 with one sliding red pill, then three small lines: confidence, `SHARINGAN  0.7 S` (with `QR` before the time when a code was read), `CTRL C  /  ENTER CLOSES`.
 
 Labels are mono, uppercase, 9.5 px, with 1.6 px letter spacing. The engine line says `TESSERACT` only in the fallback.
 
